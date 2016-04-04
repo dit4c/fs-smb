@@ -13,6 +13,7 @@ from smb.SMBConnection import SMBConnection
 from smb.base import NotConnectedError
 from smb.base import NotReadyError
 from smb.base import OperationFailure
+from smb.smb_structs import ProtocolError
 
 from fs import _thread_synchronize_default
 from fs import iotools
@@ -316,7 +317,13 @@ class SMBFS(FS):
             self._conn = SMBConnection(
                 self.username, self.password, self.client_name,
                 self.server_name, use_ntlm_v2=True)
-            self._conn.connect(self.server_IP, self.port)
+            try:
+		self._conn.connect(self.server_IP, self.port)
+	    except ProtocolError:
+		self._conn = SMBConnection(
+                    self.username, self.password, self.client_name,
+                    self.server_name, use_ntlm_v2=False)
+                self._conn.connect(self.server_IP, self.port)
         return self._conn
 
     @synchronize
